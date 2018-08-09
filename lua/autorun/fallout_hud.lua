@@ -55,6 +55,7 @@ local function init()
 			a:Remove()--remove the image from wolven's hud
 		end
 	end
+	hook.Remove("PlayerSwitchWeapon","HideHUDWIthCamera")
 
 	net.Receive("pma_create_aura",function() end)
 	net.Receive("pma_remove_aura",function() end)
