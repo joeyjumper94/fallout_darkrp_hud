@@ -1,53 +1,58 @@
-local loaded=loaded or LocalPlayer and LocalPlayer():IsValid()
 local function init()
-	loaded=true
 	if SERVER then
 		AddCSLuaFile("autorun/fallout_hud.lua")
-		resource.AddFile("materials/hud/fo/ammo.vmt")
-		resource.AddFile("materials/hud/fo/ammo.vtf")
-		resource.AddFile("materials/hud/fo/armor.vmt")
-		resource.AddFile("materials/hud/fo/armor.vtf")
-		resource.AddFile("materials/hud/fo/compass.vmt")
-		resource.AddFile("materials/hud/fo/compass.vtf")
-		resource.AddFile("materials/hud/fo/life_hud.vmt")
-		resource.AddFile("materials/hud/fo/life_hud.vtf")
-		resource.AddFile("materials/hud/fo/tick.vmt")
-		resource.AddFile("materials/hud/fo/tick.vtf")
-		resource.AddFile("sound/death.mp3")
+		if true then
+			resource.AddWorkshop(631583771)
+		else
+			resource.AddFile("materials/hud/fo/ammo.vmt")
+			resource.AddFile("materials/hud/fo/ammo.vtf")
+			resource.AddFile("materials/hud/fo/armor.vmt")
+			resource.AddFile("materials/hud/fo/armor.vtf")
+			resource.AddFile("materials/hud/fo/compass.vmt")
+			resource.AddFile("materials/hud/fo/compass.vtf")
+			resource.AddFile("materials/hud/fo/life_hud.vmt")
+			resource.AddFile("materials/hud/fo/life_hud.vtf")
+			resource.AddFile("materials/hud/fo/tick.vmt")
+			resource.AddFile("materials/hud/fo/tick.vtf")
+			resource.AddFile("sound/death.mp3")
+		end
 		return
 	end
 	hook.Remove("HUDPaint","StarWars.HUDPaint")
 	hook.Remove("HUDPaint","QuantumMain")
-	
 	hook.Remove("HUDShouldDraw","MHUD_Hide")
 	hook.Remove("Tick","MHUDATick")
 	hook.Remove("Tick","MHUDAgTick")
 	hook.Remove("HUDPaint","MHUDEntityDisplay")
 	hook.Remove("InitPostEntity","MHUDInit")
 	hook.Remove("Tick","MHUDTick")
-
 	hook.Remove("HUDPaint","GraphiteAgenda")
 	hook.Remove("HUDPaint","GraphiteAmmo")
 	hook.Remove("HUDPaint","GraphiteBase")
 	hook.Remove("HUDPaint","GraphiteDoor")
 	hook.Remove("HUDPaint","GraphiteLevel")
 	hook.Remove("HUDPaint","GraphiteNotifications")
-
 	hook.Remove("HUDPaint","mlphud")
 	hook.Remove("Initialize","mlphudfont")
 	hook.Remove("PopulateToolMenu","MLPHUDOptioncreate")
-
 	hook.Remove("HUDPaint","DarkRP_Mod_HUDPaint_2")--remove wolven's HUD
 	hook.Remove("HUDPaint","DarkRP_Mod_HUDPaint")--remove part of pony wither's hud
 	hook.Remove("HUDShouldDraw","disableHUD")
-
-	
 	hook.Remove("HUDPaint","karma_localInfo2")
 	if modelPanel and modelPanel:IsValid() then
 		modelPanel:Remove()
 	end
 	if av and av:IsValid() then
 		av:Remove()--remove the image from wolven's hud
+	end
+	if MHUD and MHUD:IsValid() then
+		MHUD:Remove()--remove TPLs hud
+	end
+	if MHUDAg and MHUDAg:IsValid() then
+		MHUDAg:Remove()--remove TPLs hud
+	end
+	if MHUDA and MHUDA:IsValid() then
+		MHUDA:Remove()--remove TPLs hud
 	end
 	if GetAvatarPanel then
 		local a=GetAvatarPanel()
@@ -182,7 +187,28 @@ local function init()
 		end)
 	end)
 
-	local function DrawPlayerInfo(ply)
+	local dangerous={--if the value is false, we draw nothing
+		gmod_camera=false,
+		gmod_tool=false,
+		pocket=false,
+		keys=false,
+		med_kit=false,
+		weapon_medkit=false,
+		weapon_keypadchecker=false,
+		weapon_physcannon=false,
+		weapon_physgun=false,
+		weaponchecker=false,
+		weaponchecker=false,
+		none=false,
+		unarrest_stick=false,
+		
+		
+		arrest_stick=true,
+		stunstick=true,
+		weapon_stunstick=true,
+		weapon_357=true,
+	}
+	local function DrawPlayerInfo(ply,showhealth)
 		local pos=ply:EyePos()
 
 		pos.z=pos.z+10
@@ -192,12 +218,31 @@ local function init()
 		if DarkRP then
 			draw.DrawText(ply:Nick(),"FOFont_normal",pos.x+1,pos.y+5+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 			draw.DrawText(ply:Nick(),"FOFont_normal",pos.x,pos.y+5,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
-		
-			draw.DrawText(DarkRP.getPhrase("health",(ply:Health() or 0)),"FOFont_normal",pos.x+1,pos.y+35+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
-			draw.DrawText(DarkRP.getPhrase("health",(ply:Health() or 0)),"FOFont_normal",pos.x,pos.y+35,Color(192,57,43,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+			if GAMEMODE.Config.showhealth or showhealth then
+				draw.DrawText(DarkRP.getPhrase("health",(ply:Health() or 0)),"FOFont_normal",pos.x+1,pos.y+35+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+				draw.DrawText(DarkRP.getPhrase("health",(ply:Health() or 0)),"FOFont_normal",pos.x,pos.y+35,Color(192,57,43,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+			end
 			local teamname=team.GetName(ply:Team())
 			draw.DrawText("Job: "..(ply:getDarkRPVar("job") or teamname or "nil"),"FOFont_normal",pos.x+1,pos.y+60+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 			draw.DrawText("Job: "..(ply:getDarkRPVar("job") or teamname or "nil"),"FOFont_normal",pos.x,pos.y+60,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+
+			local weapon=ply:GetActiveWeapon()
+			weapon=weapon:IsValid() and weapon:GetClass():lower() or "none"
+			if dangerous[weapon]==false then
+				--nothing to worry about here
+			elseif dangerous[weapon]==true then
+				draw.DrawText("Visibly armed","FOFont_normal",pos.x+1,pos.y+85+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+				draw.DrawText("Visibly armed","FOFont_normal",pos.x,pos.y+85,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+			elseif weapon:StartWith("weapon_vape") then
+				dangerous[weapon]=false--mark it as safe
+			elseif weapon:StartWith("cw") or weapon:StartWith("m9k") or weapon:StartWith("fas") or weapon:StartWith("weapon") then
+				dangerous[weapon]=true--cache it in the table so we don't have to do the find operation again
+				draw.DrawText("Visibly armed","FOFont_normal",pos.x+1,pos.y+85+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+				draw.DrawText("Visibly armed","FOFont_normal",pos.x,pos.y+85,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+			else--unknown weapon
+				draw.DrawText("active weapon: "..weapon,"FOFont_normal",pos.x+1,pos.y+85+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+				draw.DrawText("active weapon: "..weapon,"FOFont_normal",pos.x,pos.y+85,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+			end
 			local Page=Material("icon16/page_white_text.png")
 			local function GunLicense()
 				if LocalPlayer():getDarkRPVar("HasGunlicense") then
@@ -229,39 +274,55 @@ local function init()
 		
 		local wantedText=DarkRP.getPhrase("wanted",tostring(ply:getDarkRPVar("wantedReason")))
 		
-		draw.RoundedBox(4,pos.x-51,pos.y-100-5,100+2,30+2,Color(30,30,30,255))
-		draw.RoundedBox(4,pos.x-50,pos.y-99-5,100,30,Color(70,70,70,255))
+--		draw.RoundedBox(4,pos.x-51,pos.y-100-5,100+2,30+2,Color(30,30,30,255))
+--		draw.RoundedBox(4,pos.x-50,pos.y-99-5,100,30,Color(70,70,70,255))
 		
 		draw.DrawText(wantedText,"FOFont_normal",pos.x+1,pos.y-99,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 		draw.DrawText(wantedText,"FOFont_normal",pos.x,pos.y-100,Color(255,0,0,200),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 	end
 
+	local medkits={
+		med_kit=true,
+		weapon_medkit=true,
+	}
 	local function DrawEntityDisplay()
-		local shootPos=LocalPlayer():GetShootPos()
+		local ViewPos=vector_origin
+		local ViewEnt=GetViewEntity()
+		local SpecEnt=FSpectate and FSpectate.getSpecEnt()
+		if SpecEnt and SpecEnt.GetShootPos then
+			ViewPos=SpecEnt:GetShootPos()
+		elseif SpecEnt and SpecEnt.GetPos then
+			ViewPos=SpecEnt:GetPos()
+		elseif ViewEnt.GetShootPos then
+			ViewPos=ViewEnt:GetShootPos()
+		elseif ViewEnt.GetPos then
+			ViewPos=ViewEnt:GetPos()
+		end
+--		local showall=GetViewEntity()!=LocalPlayer()
 		local aimVec=LocalPlayer():GetAimVector()
-
+		local showhealth=false
+		for int,swep in pairs(LocalPlayer():GetWeapons()) do
+			if medkits[swep:GetClass()] then
+				showhealth=true
+				break
+			end
+		end
 		for k,ply in pairs(players or player.GetAll()) do
-			if !ply:Alive() or ply==LocalPlayer() then continue end
+			if !ply:Alive() or ply==ViewEnt and !SpecEnt then continue end
 			local hisPos=ply:GetShootPos()
 			if DarkRP and ply:getDarkRPVar("wanted") then DrawWantedInfo(ply) end
-
-			if hisPos:DistToSqr(shootPos)<500000 then
-				local pos=hisPos-shootPos
-				local unitPos=pos:GetNormalized()
+			if SpecEnt and hisPos:DistToSqr(ViewPos)<40000 then
+				DrawPlayerInfo(ply,showhealth)
+			elseif hisPos:DistToSqr(ViewPos)<500000 then
+				local pos=hisPos-ViewPos
+--				local unitPos=pos:GetNormalized()
 --				if unitPos:Dot(aimVec)>0.95 then
-					local trace=util.QuickTrace(shootPos,pos,LocalPlayer())
+					local trace=util.QuickTrace(ViewPos,pos,{LocalPlayer(),GetViewEntity()})
 					if trace.Hit and trace.Entity!=ply then
 					else
-						DrawPlayerInfo(ply)
+						DrawPlayerInfo(ply,showhealth)
 					end
 --				end
-			elseif false then
-				local pos=hisPos-shootPos
-				local trace=util.QuickTrace(shootPos,pos,LocalPlayer())
-				if trace.Hit and trace.Entity!=ply then
-				else
-					print(ply,hisPos:DistToSqr(shootPos))
-				end
 			end
 		end
 		
@@ -291,7 +352,6 @@ local function init()
 	hook.Add("HUDPaint","DrawFOH",function()
 --		if game.SinglePlayer() then return end
 		if DarkRP then
---			LevelBar()
 			Agenda()
 			DrawVoiceChat()
 			LockDown()
@@ -309,7 +369,7 @@ local function init()
 		["CHudSecondaryAmmo"]=true,
 	}
 
-	hook.Add("HUDShouldDraw","HUDDisabler",function(name)--This is a local function because all functions should be local unless another file needs to run it
+	hook.Add("HUDShouldDraw","HUDDisabler",function(name)
 		if tohide[name]then
 			return false
 		end
@@ -350,9 +410,9 @@ local function init()
 	end)
 
 	hook.Add("PlayerDeath","playerDeathTest",function(victim,weapon,killer)
-		umsg.Start("FOSound")
-		umsg.Entity(target)
-		umsg.End()
+--		umsg.Start("FOSound")
+--		umsg.Entity(target)
+--		umsg.End()
 	end)
 
 	hook.Add("PlayerDeathSound","OverrideDeathSound",function()
@@ -447,19 +507,35 @@ local function init()
 
 	hook.Add("HUDPaint","FalloutHUD.draw",function()
 		if !LocalPlayer():Alive() then return end
-		if DarkRP and !LocalPlayer().DarkRPVars then return end
-
+		local magic=LocalPlayer().DarkRPVars and LocalPlayer().DarkRPVars.magic
+		local magic_offset=0
+		local job
+		if TeamTable then
+			local tbl=TeamTable[LocalPlayer():Team()]
+			if tbl and tbl.Name and tbl.Regiment then
+				job=tbl.Regiment.." "..tbl.Name
+			end
+		elseif LocalPlayer().DarkRPVars then
+			job=LocalPlayer().DarkRPVars.job
+		end
+		
+		if magic then
+			drawBlur(90,ScrH()-135," magic: "..math.Round(magic,3),3)
+			magic_offset=20
+		end
 		if DarkRP and !DarkRP.disabledDefaults["modules"]["hungermod"] then
-			drawBlur(90,ScrH()-195," Name: "..(LocalPlayer().DarkRPVars.rpname or ""),0)
-			drawBlur(90,ScrH()-175," Job: "..(LocalPlayer().DarkRPVars.job or ""),0)
-			drawBlur(90,ScrH()-155," HP: "..tostring(LocalPlayer():Health()).." Armor: "..tostring(LocalPlayer():Armor()),0)
-			drawBlur(90,ScrH()-135," Hunger: "..(LocalPlayer().DarkRPVars.Energy and math.Round(LocalPlayer().DarkRPVars.Energy,3) or "nil"),0)
-		elseif DarkRP then
-			drawBlur(90,ScrH()-175," Name: "..(LocalPlayer().DarkRPVars.rpname or ""),0)
-			drawBlur(90,ScrH()-155," Job: "..(LocalPlayer().DarkRPVars.job or ""),0)
-			drawBlur(90,ScrH()-135," HP: "..tostring(LocalPlayer():Health()).." Armor: "..tostring(LocalPlayer():Armor()),0)
+			drawBlur(90,ScrH()-195-magic_offset," Name: "..(LocalPlayer().DarkRPVars.rpname or ""),0)
+			if job then
+				drawBlur(90,ScrH()-175-magic_offset," Job: "..job,0)
+			end
+			drawBlur(90,ScrH()-155-magic_offset," HP: "..tostring(LocalPlayer():Health()).." Armor: "..tostring(LocalPlayer():Armor()),0)
+			drawBlur(90,ScrH()-135-magic_offset," Hunger: "..(LocalPlayer().DarkRPVars.Energy and math.Round(LocalPlayer().DarkRPVars.Energy,3) or "nil"),0)
 		else
-			drawBlur(90,ScrH()-135," HP: "..tostring(LocalPlayer():Health()).." Armor: "..tostring(LocalPlayer():Armor()),0)
+			drawBlur(90,ScrH()-175-magic_offset," Name: "..LocalPlayer():Name(),0)
+			if job then
+				drawBlur(90,ScrH()-155-magic_offset," Job: "..job,0)
+			end
+			drawBlur(90,ScrH()-135-magic_offset," HP: "..tostring(LocalPlayer():Health()).." Armor: "..tostring(LocalPlayer():Armor()),0)
 		end
 		if LevelSystemConfiguration then
 			local XP=LocalPlayer():getDarkRPVar('xp') or 0
@@ -471,17 +547,17 @@ local function init()
 			drawBlur(ScrW()-95,ScrH()-195," Level: "..(LocalPlayer():getDarkRPVar('level') or "nil"),2)
 		end
 		
-		if DarkRP then
-			local ClDatTab=ClDatTab or {}
-			net.Receive("ClUpdB", function()
-				ClDatTab = net.ReadTable()
-			end)
-			if LocalPlayer().GetKarma then
-				drawBlur(ScrW()-95,ScrH()-195," karma: "..(LocalPlayer():GetKarma() or "nil"),2)
-			end
-			if ClDatTab["CuB"] then
-				drawBlur(ScrW()-95,ScrH()-215,"Your bounty: "..DarkRP.formatMoney(ClDatTab["CuB"][LocalPlayer()] or 0),2)
-			end
+		local ClDatTab=ClDatTab or {}
+		net.Receive("ClUpdB", function()
+			ClDatTab = net.ReadTable()
+		end)
+		if LocalPlayer().GetKarma then
+			drawBlur(ScrW()-95,ScrH()-195," karma: "..(LocalPlayer():GetKarma() or "nil"),2)
+		end
+		if ClDatTab["CuB"] then
+			drawBlur(ScrW()-95,ScrH()-215," Your bounty: "..DarkRP.formatMoney(ClDatTab["CuB"][LocalPlayer()] or 0),2)
+		end
+		if LocalPlayer().DarkRPVars then
 			drawBlur(ScrW()-95,ScrH()-175," Salary: "..(LocalPlayer().DarkRPVars.salary or "nil"),2)
 			drawBlur(ScrW()-95,ScrH()-155," Bottlecaps: "..(LocalPlayer().DarkRPVars.money or "nil"),2)
 		end
@@ -616,7 +692,7 @@ local function init()
 		surface.DrawPoly(vertexData)
 	end
 
-
+--[[unused function
 	function GetAngleOfLineBetweenTwoPoints(p1,p2)
 
 		xDiff=p2:GetPos().x-p1:GetPos().x 
@@ -625,7 +701,7 @@ local function init()
 		return math.atan2(yDiff,xDiff)*(180/math.pi)
 
 	end
-
+--]]
 	hook.Add("HUDPaint","FOHL",function()
 		local c=LocalPlayer():GetPlayerColor()*255
 		text=Vector(c.x,c.y,c.z)
@@ -685,19 +761,16 @@ local function init()
 
 			end
 
-			elseif(LocalPlayer():Health()>0) then
+		elseif(LocalPlayer():Health()>0) then
 
 			for i=0,36.3636 do
 
 				surface.SetTexture(htock)
 				surface.SetDrawColor(getHUDColor.x+25,getHUDColor.y+25,getHUDColor.z+25,255)
 				surface.DrawTexturedRectRotated(ScrW()-100-i*7,ScrH()-116,24,30,0)
-
 			end
-
 		end
-
 	end)
 end
 hook.Add("Initialize","fallout_hud",init)
-if loaded then init() end
+if player.GetAll()[1] or LocalPlayer and LocalPlayer():IsValid() then init() end
