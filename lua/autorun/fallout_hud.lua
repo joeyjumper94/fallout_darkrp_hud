@@ -193,6 +193,7 @@ local function init()
 		pocket=false,
 		keys=false,
 		med_kit=false,
+		weapon_blowtorch=false,
 		weapon_medkit=false,
 		weapon_keypadchecker=false,
 		weapon_physcannon=false,
@@ -286,13 +287,16 @@ local function init()
 		weapon_medkit=true,
 	}
 	local function DrawEntityDisplay()
+		local showhealth=false
 		local ViewPos=vector_origin
 		local ViewEnt=GetViewEntity()
 		local SpecEnt=FSpectate and FSpectate.getSpecEnt()
 		if SpecEnt and SpecEnt.GetShootPos then
 			ViewPos=SpecEnt:GetShootPos()
+			showhealth=true
 		elseif SpecEnt and SpecEnt.GetPos then
 			ViewPos=SpecEnt:GetPos()
+			showhealth=true
 		elseif ViewEnt.GetShootPos then
 			ViewPos=ViewEnt:GetShootPos()
 		elseif ViewEnt.GetPos then
@@ -300,7 +304,6 @@ local function init()
 		end
 --		local showall=GetViewEntity()!=LocalPlayer()
 		local aimVec=LocalPlayer():GetAimVector()
-		local showhealth=false
 		for int,swep in pairs(LocalPlayer():GetWeapons()) do
 			if medkits[swep:GetClass()] then
 				showhealth=true
