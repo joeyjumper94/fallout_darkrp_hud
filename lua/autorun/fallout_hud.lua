@@ -2,7 +2,7 @@ local function init()
 	if SERVER then
 		AddCSLuaFile("autorun/fallout_hud.lua")
 		if true then
-			resource.AddWorkshop(631583771)
+			resource.AddWorkshop("631583771")
 		else
 			resource.AddFile("materials/hud/fo/ammo.vmt")
 			resource.AddFile("materials/hud/fo/ammo.vtf")
@@ -72,31 +72,27 @@ local function init()
 		--if you DarkRP_HUD this to true, ALL of DarkRP's HUD will be disabled. That is the health bar and stuff,
 		--but also the agenda, the voice chat icons, lockdown text, player arrested text and the names above players' heads
 		["DarkRP_HUD"]=true,
-
 		--DarkRP_EntityDisplay is the text that is drawn above a player when you look at them.
 		--This also draws the information on doors and vehicles
 		["DarkRP_EntityDisplay"]=true,
-
 		--This is the one you're most likely to replace first
 		--DarkRP_LocalPlayerHUD is the default HUD you see on the bottom left of the screen
 		--It shows your health, job, salary and wallet, but NOT hunger(if you have hungermod enabled)
 		["DarkRP_LocalPlayerHUD"]=true,
-
 		--If you have hungermod enabled, you will see a hunger bar in the DarkRP_LocalPlayerHUD
 		--This does not get disabled with DarkRP_LocalPlayerHUD so you will need to disable DarkRP_Hungermod too
 		["DarkRP_Hungermod"]=true,
+		["DarkRP_Agenda"]=false==false,--Drawing the DarkRP agenda
+		["DarkRP_LockdownHUD"]=false==false,--Lockdown info on the HUD
+		["DarkRP_ArrestedHUD"]=false==false,--Arrested HUD
 
-		--Drawing the DarkRP agenda
-		["DarkRP_Agenda"]=false,
-
-		--Lockdown info on the HUD
-		["DarkRP_LockdownHUD"]=false,
-
-		--Arrested HUD
-		["DarkRP_ArrestedHUD"]=false,
+		["CHudHealth"]=true,
+		["CHudBattery"]=true,
+		["CHudAmmo"]=true,
+		["CHudDamageIndicator"]=true,
+		["CHudSecondaryAmmo"]=true,
 	}
-	--this is the code that actually disables the drawing.
-	hook.Add("HUDShouldDraw","HideDefaultDarkRPHud",function(name)
+	hook.Add("HUDShouldDraw","HideDefaultDarkRPHud",function(name)--this is the code that actually disables the drawing.
 		if hideHUDElements[name] then
 			return false
 		end
@@ -209,6 +205,8 @@ local function init()
 		weapon_stunstick=true,
 		weapon_357=true,
 	}
+	
+	local Page=Material("icon16/page_white_text.png")
 	local function DrawPlayerInfo(ply,showhealth)
 		local pos=ply:EyePos()
 
@@ -219,7 +217,7 @@ local function init()
 		if DarkRP then
 			draw.DrawText(ply:Nick(),"FOFont_normal",pos.x+1,pos.y+5+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 			draw.DrawText(ply:Nick(),"FOFont_normal",pos.x,pos.y+5,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
-			if GAMEMODE.Config.showhealth or showhealth then
+			if showhealth then
 				draw.DrawText(DarkRP.getPhrase("health",(ply:Health() or 0)),"FOFont_normal",pos.x+1,pos.y+35+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 				draw.DrawText(DarkRP.getPhrase("health",(ply:Health() or 0)),"FOFont_normal",pos.x,pos.y+35,Color(192,57,43,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 			end
@@ -236,7 +234,7 @@ local function init()
 				draw.DrawText("Visibly armed","FOFont_normal",pos.x,pos.y+85,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 			elseif weapon:StartWith("weapon_vape") then
 				dangerous[weapon]=false--mark it as safe
-			elseif weapon:StartWith("cw") or weapon:StartWith("m9k") or weapon:StartWith("fas") or weapon:StartWith("weapon") then
+			elseif weapon:StartWith("cw_") or weapon:StartWith("khr_") or weapon:StartWith("m9k_") or weapon:StartWith("fas") or weapon:StartWith("weapon_") then
 				dangerous[weapon]=true--cache it in the table so we don't have to do the find operation again
 				draw.DrawText("Visibly armed","FOFont_normal",pos.x+1,pos.y+85+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 				draw.DrawText("Visibly armed","FOFont_normal",pos.x,pos.y+85,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
@@ -244,15 +242,11 @@ local function init()
 				draw.DrawText("active weapon: "..weapon,"FOFont_normal",pos.x+1,pos.y+85+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 				draw.DrawText("active weapon: "..weapon,"FOFont_normal",pos.x,pos.y+85,team.GetColor(ply:Team()),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 			end
-			local Page=Material("icon16/page_white_text.png")
-			local function GunLicense()
-				if LocalPlayer():getDarkRPVar("HasGunlicense") then
-
-					surface.SetMaterial(Page)
-					surface.SetDrawColor(255,255,255,255)
-					surface.DrawTexturedRect(Settings.PosX+Settings.Width+10,Settings.PosY+Settings.Height-32,32,32)
-
-				end
+			
+			if ply:getDarkRPVar("HasGunlicense") then
+				surface.SetMaterial(Page)
+				surface.SetDrawColor(255,255,255,255)
+				surface.DrawTexturedRect(pos.x-16,pos.y-32,32,32)
 			end
 		else
 			draw.DrawText(ply:Name(),"FOFont_normal",pos.x+1,pos.y+5+1,Color(0,0,0,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
@@ -288,6 +282,11 @@ local function init()
 	}
 	local function DrawEntityDisplay()
 		local showhealth=false
+		if GAMEMODE and GAMEMODE.Config and GAMEMODE.Config.showhealth then
+			showhealth=true
+		elseif LocalPlayer().isMedic and LocalPlayer():isMedic() then
+			showhealth=true
+		end
 		local ViewPos=vector_origin
 		local ViewEnt=GetViewEntity()
 		local SpecEnt=FSpectate and FSpectate.getSpecEnt()
@@ -304,10 +303,12 @@ local function init()
 		end
 --		local showall=GetViewEntity()!=LocalPlayer()
 		local aimVec=LocalPlayer():GetAimVector()
-		for int,swep in pairs(LocalPlayer():GetWeapons()) do
-			if medkits[swep:GetClass()] then
-				showhealth=true
-				break
+		if not showhealth then
+			for int,swep in pairs(LocalPlayer():GetWeapons()) do
+				if medkits[swep:GetClass()] then
+					showhealth=true
+					break
+				end
 			end
 		end
 		for k,ply in pairs(players or player.GetAll()) do
@@ -364,19 +365,6 @@ local function init()
 		DrawEntityDisplay()
 	end)
 
-	local tohide={--This is a table where the keys are the HUD items to hide
-		["CHudHealth"]=true,
-		["CHudBattery"]=true,
-		["CHudAmmo"]=true,
-		["CHudDamageIndicator"]=true,
-		["CHudSecondaryAmmo"]=true,
-	}
-
-	hook.Add("HUDShouldDraw","HUDDisabler",function(name)
-		if tohide[name]then
-			return false
-		end
-	end)
 
 
 	 
